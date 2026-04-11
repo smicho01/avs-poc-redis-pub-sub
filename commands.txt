@@ -1,0 +1,13 @@
+# list all buckets
+aws --endpoint-url=http://localhost:4566 --region us-east-1 s3 ls
+
+# list files in file-storage
+aws --endpoint-url=http://localhost:4566 --region us-east-1 s3 ls s3://file-storage --recursive
+
+
+# list files in external-malware-scanner-inbox
+aws --endpoint-url=http://localhost:4566 --region us-east-1 s3 ls s3://external-malware-scanner-inbox --recursive
+
+aws --endpoint-url=http://localhost:4566 --region us-east-1 s3 ls s3://external-malware-scanner-healthy --recursive
+
+aws --endpoint-url=http://localhost:4566 --region us-east-1 s3 ls s3://external-malware-scanner-quarantine --recursive

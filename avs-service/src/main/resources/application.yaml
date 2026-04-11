@@ -1,0 +1,25 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: avs-service
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+aws:
+  endpoint: http://localhost:4566
+  region: us-east-1
+  credentials:
+    access-key: test
+    secret-key: test
+  s3:
+    source-bucket: file-storage
+    scanner-bucket: external-malware-scanner-inbox
+  sqs:
+    queue-name: scan-results
+
+scan:
+  timeout-seconds: 30

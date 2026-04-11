@@ -1,0 +1,27 @@
+# Maven build output
+**/target/
+
+# IntelliJ IDEA
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+
+# VS Code
+**/.vscode/
+
+# Spring Boot
+**/application-local.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+**/logs/
+
+# Maven wrapper
+!**/mvnw
+!**/mvnw.cmd
+!**/.mvn/

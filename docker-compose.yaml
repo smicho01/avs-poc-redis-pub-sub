@@ -1,0 +1,54 @@
+services:
+
+  localstack:
+    image: localstack/localstack:3.3
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,sqs,sns
+      - DEFAULT_REGION=us-east-1
+      - LOCALSTACK_HOST=localstack
+    volumes:
+      - "./localstack-init/setup.sh:/etc/localstack/init/ready.d/setup.sh"
+      - localstack-data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: filedb
+      POSTGRES_USER: fileuser
+      POSTGRES_PASSWORD: filepass
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fileuser -d filedb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  localstack-data:
+  postgres-data:
+  redis-data:
