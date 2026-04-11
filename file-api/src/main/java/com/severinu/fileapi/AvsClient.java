@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.UUID;
+
 @Service
 public class AvsClient {
 
@@ -17,11 +19,12 @@ public class AvsClient {
         this.restTemplate = restTemplate;
     }
 
-    public ScanResult scan(String s3Bucket, String s3Key, String fileName, String correlationId) {
+    public ScanResult scan(String s3Bucket, String s3Key, String fileName, UUID fileId) {
         String url = UriComponentsBuilder.fromHttpUrl(avsUrl + "/scan")
                 .queryParam("s3Bucket", s3Bucket)
                 .queryParam("s3Key", s3Key)
                 .queryParam("fileName", fileName)
+                .queryParam("fileId", fileId.toString())
                 .toUriString();
 
         return restTemplate.getForObject(url, ScanResult.class);

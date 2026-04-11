@@ -18,6 +18,7 @@ public class ScanController {
 
     private final PendingScanRegistry registry;
     private final ExternalMalwareScannerUploadService externalMalwareScannerUploadService;
+    private final ScanCacheService cacheService;
 
     @Value("${scan.timeout-seconds}")
     private long timeoutSeconds;
@@ -26,13 +27,27 @@ public class ScanController {
     public DeferredResult<ScanResult> scan(
             @RequestParam String s3Bucket,
             @RequestParam String s3Key,
-            @RequestParam String fileName) {
+            @RequestParam String fileName,
+            @RequestParam String fileId) {
 
-        String correlationId = UUID.randomUUID().toString();
         long timeoutMs = TimeUnit.SECONDS.toMillis(timeoutSeconds);
-
         DeferredResult<ScanResult> deferredResult = new DeferredResult<>(timeoutMs);
-        registry.register(correlationId, deferredResult);
+
+        // Check Redis cache first.
+        // If this file was scanned recently the result is already here.
+        // No need to upload to external scanner again - respond instantly.
+        ScanResult cachedResult = cacheService.get(fileId);
+        if (cachedResult != null) {
+            log.info("Returning cached scan result. fileId=[{}] clean=[{}]", fileId, cachedResult.clean());
+            deferredResult.setResult(cachedResult);
+            return deferredResult;
+        }
+
+        // Cache miss - this file has not been scanned recently.
+        // Register the DeferredResult so the Redis subscriber can complete it
+        // when the scan result arrives (possibly on a different pod).
+        String correlationId = UUID.randomUUID().toString();
+        registry.register(correlationId, fileId, deferredResult);
 
         deferredResult.onTimeout(() -> {
             log.warn("Scan timed out. correlationId=[{}] fileName=[{}]", correlationId, fileName);
@@ -44,9 +59,10 @@ public class ScanController {
                 log.info("Scan completed. correlationId=[{}] fileName=[{}]", correlationId, fileName)
         );
 
-        log.info("Scan request received. correlationId=[{}] s3Bucket=[{}] s3Key=[{}] fileName=[{}]",
-                correlationId, s3Bucket, s3Key, fileName);
+        log.info("Cache MISS - uploading to external scanner. correlationId=[{}] fileId=[{}] fileName=[{}]",
+                correlationId, fileId, fileName);
 
+        // Copy file to external scanner inbox and wait for async result
         externalMalwareScannerUploadService.copyToExternalMalwareScanner(s3Bucket, s3Key, correlationId);
 
         return deferredResult;

@@ -47,7 +47,7 @@ public class FileService {
         FileMetadata metadata = fileRepository.findById(fileId)
                 .orElseThrow(() -> new IllegalArgumentException("File not found: " + fileId));
 
-        return avsClient.scan(metadata.getS3Bucket(), metadata.getS3Key(), metadata.getFileName(), fileId.toString());
+        return avsClient.scan(metadata.getS3Bucket(), metadata.getS3Key(), metadata.getFileName(), fileId);
     }
 
     public FileMetadata getMetadata(UUID fileId) {
